@@ -3,6 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
+import { User } from './user/entities/User.entity';
+import { Role } from './user/entities/role.entity';
+import { Permission } from './user/entities/permission.entity';
 
 @Module({
   imports: [
@@ -15,7 +18,7 @@ import { UserModule } from './user/user.module';
       database: 'meeting_room_booking_system',
       synchronize: true,
       logging: true,
-      entities: [],
+      entities: [User, Role, Permission],
       poolSize: 10,
       connectorPackage: 'mysql2',
       extra: {
