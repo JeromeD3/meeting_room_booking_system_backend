@@ -77,7 +77,7 @@ export class UserController {
       },
       {
         expiresIn:
-          this.configService.get('jwt_refresh_token_expres_time') || '7d',
+          this.configService.get('jwt_refresh_token_expires_time') || '7d',
       },
     );
 
@@ -107,7 +107,7 @@ export class UserController {
       },
       {
         expiresIn:
-          this.configService.get('jwt_refresh_token_expres_time') || '7d',
+          this.configService.get('jwt_refresh_token_expires_time') || '7d',
       },
     );
     return vo;
@@ -139,7 +139,7 @@ export class UserController {
         },
         {
           expiresIn:
-            this.configService.get('jwt_refresh_token_expres_time') || '7d',
+            this.configService.get('jwt_refresh_token_expires_time') || '7d',
         },
       );
 
@@ -178,7 +178,7 @@ export class UserController {
         },
         {
           expiresIn:
-            this.configService.get('jwt_refresh_token_expres_time') || '7d',
+            this.configService.get('jwt_refresh_token_expires_time') || '7d',
         },
       );
 
