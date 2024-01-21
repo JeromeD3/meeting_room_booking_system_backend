@@ -1,4 +1,4 @@
-export interface UserInfo {
+export interface UserInfoVo {
   id: number;
 
   username: string;
@@ -22,7 +22,7 @@ export interface UserInfo {
   permissions: string[];
 }
 export class LoginUserVo {
-  userInfo: UserInfo;
+  userInfo: UserInfoVo;
 
   accessToken: string;
 
