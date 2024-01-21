@@ -14,7 +14,9 @@ import { RedisService } from '../redis/redis.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UserInfo } from './vo/login-user.vo';
+import { UserInfoVo } from './vo/login-user.vo';
+import { RequireLogin, UserInfo } from '../custom.decorator';
+import { UserDetailVo } from './vo/user-info.vo';
 
 @Controller('user')
 export class UserController {
@@ -95,7 +97,7 @@ export class UserController {
     return this.generateTokens(loginUser, true);
   }
 
-  private async refreshToken(user: Partial<UserInfo>) {
+  private async refreshToken(user: Partial<UserInfoVo>) {
     const access_token = this.jwtService.sign(
       {
         userId: user.id,
@@ -145,5 +147,23 @@ export class UserController {
     } catch (e) {
       throw new UnauthorizedException('token 已失效，请重新登录');
     }
+  }
+
+  @Get('info')
+  @RequireLogin()
+  async info(@UserInfo('userId') userId: number) {
+    const user = await this.userService.findUserDetailById(userId);
+
+    const vo = new UserDetailVo();
+    vo.id = user.id;
+    vo.email = user.email;
+    vo.username = user.username;
+    vo.headPic = user.headPic;
+    vo.phoneNumber = user.phoneNumber;
+    vo.nickName = user.nickName;
+    vo.createTime = user.createTime;
+    vo.isFrozen = user.isFrozen;
+
+    return vo;
   }
 }
