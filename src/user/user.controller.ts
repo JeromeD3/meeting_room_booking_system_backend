@@ -14,6 +14,7 @@ import { RedisService } from '../redis/redis.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserInfo } from './vo/login-user.vo';
 
 @Controller('user')
 export class UserController {
@@ -55,9 +56,9 @@ export class UserController {
   @Inject(ConfigService)
   private configService: ConfigService;
 
-  @Post('login')
-  async userLogin(@Body() loginUser: LoginUserDto) {
-    const vo = await this.userService.login(loginUser, false);
+  private async generateTokens(user: LoginUserDto, isAdmin: boolean) {
+    const vo = await this.userService.login(user, isAdmin);
+
     vo.accessToken = this.jwtService.sign(
       {
         userId: vo.userInfo.id,
@@ -84,16 +85,23 @@ export class UserController {
     return vo;
   }
 
+  @Post('login')
+  async userLogin(@Body() loginUser: LoginUserDto) {
+    return this.generateTokens(loginUser, false);
+  }
+
   @Post('admin/login')
   async adminLogin(@Body() loginUser: LoginUserDto) {
-    const vo = await this.userService.login(loginUser, true);
+    return this.generateTokens(loginUser, true);
+  }
 
-    vo.accessToken = this.jwtService.sign(
+  private async refreshToken(user: Partial<UserInfo>) {
+    const access_token = this.jwtService.sign(
       {
-        userId: vo.userInfo.id,
-        username: vo.userInfo.username,
-        roles: vo.userInfo.roles,
-        permissions: vo.userInfo.permissions,
+        userId: user.id,
+        username: user.username,
+        roles: user.roles,
+        permissions: user.permissions,
       },
       {
         expiresIn:
@@ -101,52 +109,28 @@ export class UserController {
       },
     );
 
-    vo.refreshToken = this.jwtService.sign(
+    const refresh_token = this.jwtService.sign(
       {
-        userId: vo.userInfo.id,
+        userId: user.id,
       },
       {
         expiresIn:
           this.configService.get('jwt_refresh_token_expires_time') || '7d',
       },
     );
-    return vo;
+
+    return {
+      access_token,
+      refresh_token,
+    };
   }
 
   @Get('refresh')
   async refresh(@Query('refreshToken') refreshToken: string) {
     try {
       const data = this.jwtService.verify(refreshToken);
-
       const user = await this.userService.findUserById(data.userId, false);
-
-      const access_token = this.jwtService.sign(
-        {
-          userId: user.id,
-          username: user.username,
-          roles: user.roles,
-          permissions: user.permissions,
-        },
-        {
-          expiresIn:
-            this.configService.get('jwt_access_token_expires_time') || '30m',
-        },
-      );
-
-      const refresh_token = this.jwtService.sign(
-        {
-          userId: user.id,
-        },
-        {
-          expiresIn:
-            this.configService.get('jwt_refresh_token_expires_time') || '7d',
-        },
-      );
-
-      return {
-        access_token,
-        refresh_token,
-      };
+      return this.refreshToken(user);
     } catch (e) {
       throw new UnauthorizedException('token 已失效，请重新登录');
     }
@@ -156,36 +140,8 @@ export class UserController {
   async adminRefresh(@Query('refreshToken') refreshToken: string) {
     try {
       const data = this.jwtService.verify(refreshToken);
-
       const user = await this.userService.findUserById(data.userId, true);
-
-      const access_token = this.jwtService.sign(
-        {
-          userId: user.id,
-          username: user.username,
-          roles: user.roles,
-          permissions: user.permissions,
-        },
-        {
-          expiresIn:
-            this.configService.get('jwt_access_token_expires_time') || '30m',
-        },
-      );
-
-      const refresh_token = this.jwtService.sign(
-        {
-          userId: user.id,
-        },
-        {
-          expiresIn:
-            this.configService.get('jwt_refresh_token_expires_time') || '7d',
-        },
-      );
-
-      return {
-        access_token,
-        refresh_token,
-      };
+      return this.refreshToken(user);
     } catch (e) {
       throw new UnauthorizedException('token 已失效，请重新登录');
     }
