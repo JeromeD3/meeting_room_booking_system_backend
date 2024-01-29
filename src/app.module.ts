@@ -12,6 +12,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginGuard } from './login.guard';
 import { PermissionGuard } from './permission.guard';
+import { EmailModule } from './src/modules/email/email.module';
+import { Email2Module } from './modules/email2/email2.module';
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -54,6 +56,7 @@ import { PermissionGuard } from './permission.guard';
     }),
     RedisModule,
     EmailModule,
+    Email2Module,
   ],
   controllers: [AppController],
   providers: [
